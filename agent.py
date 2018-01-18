@@ -32,15 +32,12 @@ class Agent:
         while not frontier.empty():
             current = frontier.get()
 
-            if current[0] is None or current[1] is None:
-                continue
-
             if board[current[0]][current[1]] == GameObject.FOOD:
-                nextMove = came_from[current]
+                nextMove = current
 
                 path = ""
                 path += str(nextMove) + ", "
-                while came_from[nextMove] is not None and came_from[nextMove] is not start and nextMove is not None:
+                while came_from[nextMove] is not start:
                     nextMove = came_from[nextMove]
                     path += str(nextMove) + ", "
                 break
