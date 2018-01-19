@@ -58,6 +58,7 @@ class Agent:
                         came_from[child] = current
 
             else:
+                # The same as above but the direction has to be calculated
                 for child in self.children(board, current[0], current[1], self.get_new_direction(came_from[current][0], came_from[current][1], current[0], current[1])):
                     new_cost = cost_so_far[current] + 1
                     if child not in cost_so_far or new_cost < cost_so_far[child]:
