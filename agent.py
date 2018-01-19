@@ -12,9 +12,10 @@ class Agent:
 
     def get_move(self, board, score, turns_alive, turns_to_starve, direction):
 
-        if score is not self.score:
+        if score is not self.score: # TODO implement something smart
             self.score = score
 
+        # Initialise
         for x in range(0, 25):  # TODO make variable
             for y in range(0, 25):
                 if board[x][y] == GameObject.SNAKE_HEAD:
@@ -35,6 +36,7 @@ class Agent:
         while not frontier.empty():
             current = frontier.get()
 
+            # If food is found look up the path stored in came_from
             if board[current[0]][current[1]] == GameObject.FOOD:
                 next_move = current
 
@@ -45,9 +47,11 @@ class Agent:
                     path += str(next_move) + ", "
                 break
 
+            # For all the possible moves from current
             if current is start:
                 for child in self.children(board, current[0], current[1], direction):
                     new_cost = cost_so_far[current] + 1
+                    # Checks whether this child is already been looked at and updates it if it found a faster route
                     if child not in cost_so_far or new_cost < cost_so_far[child]:
                         cost_so_far[child] = new_cost
                         frontier.put(child, new_cost + self.manhattan_distance(child[0], child[1]))
@@ -61,10 +65,13 @@ class Agent:
                         frontier.put(child, new_cost + self.manhattan_distance(child[0], child[1]))
                         came_from[child] = current
 
-        # print(self.food)
-        # print(path)
+        print(self.food)
+        print(path)
+        if next_move is None:
+            return Move.STRAIGHT
         return self.get_turn(direction, self.snakeHeadX, self.snakeHeadY, next_move[0], next_move[1])
 
+    # Returns all the possible locations the snake can move to
     def children(self, board, x, y, direction):
         available = []
         for next in direction.get_xy_moves():
@@ -74,10 +81,12 @@ class Agent:
 
         return available
 
+    # Calculates the Manhatten distance
     def manhattan_distance(self, x, y):
         return abs(self.food[0] - x) + abs(self.food[1] - y)
 
-    def get_turn(self, direction, old_x, old_y, new_x, new_y):      # TODO check if it's not mirrored
+    # Looks up how to move into the new position
+    def get_turn(self, direction, old_x, old_y, new_x, new_y):
         dif_x = new_x - old_x
         dif_y = new_y - old_y
 
@@ -85,14 +94,12 @@ class Agent:
             if Direction(i).get_xy_manipulation() == (dif_x, dif_y):
                 new_direction = Direction(i)
 
-        return self.direction_to_move(direction, new_direction)
-
-    def direction_to_move(self, old_direction, new_direction):
         for i in range(-1, 2):
-            if old_direction.get_new_direction(Move(i)) == new_direction:
+            if direction.get_new_direction(Move(i)) == new_direction:
                 return Move(i)
         raise ValueError("Unable to get to new square")
 
+    # Gives the direction the snake moved
     def get_new_direction(self, old_x, old_y, new_x, new_y):
         dif_x = new_x - old_x
         dif_y = new_y - old_y
@@ -103,6 +110,7 @@ class Agent:
 
         return new_direction
 
+    # If the snake dies, throw error for a moment of silence
     def on_die(self):
         raise ValueError("R.I.P.")
         pass
