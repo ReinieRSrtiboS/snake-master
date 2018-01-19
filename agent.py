@@ -1,5 +1,7 @@
 from queue import PriorityQueue
 
+import sys
+
 from gameobjects import GameObject
 from move import Move, Direction
 
@@ -8,12 +10,9 @@ class Agent:
     snakeHeadX = None
     snakeHeadY = None
     score = 0
-    food = (None, None)
+    food = []
 
     def get_move(self, board, score, turns_alive, turns_to_starve, direction):
-
-        if score is not self.score: # TODO implement something smart
-            self.score = score
 
         # Initialise
         for x in range(0, 25):  # TODO make variable
@@ -21,8 +20,12 @@ class Agent:
                 if board[x][y] == GameObject.SNAKE_HEAD:
                     self.snakeHeadX = x
                     self.snakeHeadY = y
-                if board[x][y] == GameObject.FOOD:
-                    self.food = (x, y)
+                if board[x][y] == GameObject.FOOD and not self.food.__contains__((x,y)):
+                    self.food.append((x, y))
+
+        if score is not self.score: # TODO implement something smart
+            self.score = score
+            self.food.remove((self.snakeHeadX, self.snakeHeadY))
 
         next_move = None
         frontier = PriorityQueue()
@@ -82,9 +85,13 @@ class Agent:
 
         return available
 
-    # Calculates the Manhatten distance
+    # Calculates the Manhatten distance to the closest food
     def manhattan_distance(self, x, y):
-        return abs(self.food[0] - x) + abs(self.food[1] - y)
+        distance = sys.maxsize
+        for food in self.food:
+            if abs(food[0] - x) + abs(food[1] - y) < distance:
+                distance = abs(food[0] - x) + abs(food[1] - y)
+        return distance
 
     # Looks up how to move into the new position
     def get_turn(self, direction, old_x, old_y, new_x, new_y):
