@@ -20,24 +20,24 @@ class Agent:
                 if board[x][y] == GameObject.SNAKE_HEAD:
                     self.snakeHeadX = x
                     self.snakeHeadY = y
-                if board[x][y] == GameObject.FOOD and not self.food.__contains__((x,y)):
+                if board[x][y] == GameObject.FOOD and not self.food.__contains__((x, y)):
                     self.food.append((x, y))
 
-        if score is not self.score: # TODO implement something smart
+        if score is not self.score:   # TODO implement something smart
             self.score = score
             self.food.remove((self.snakeHeadX, self.snakeHeadY))
 
         next_move = None
         frontier = PriorityQueue()
         start = (self.snakeHeadX, self.snakeHeadY)
-        frontier.put(start, self.manhattan_distance(self.snakeHeadX, self.snakeHeadY))
+        frontier.put((self.manhattan_distance(self.snakeHeadX, self.snakeHeadY), start))
         cost_so_far = {}
         came_from = {}
         cost_so_far[start] = 0
         came_from[start] = None
 
         while not frontier.empty():
-            current = frontier.get()
+            current = frontier.get()[1]
 
             # If food is found look up the path stored in came_from
             if board[current[0]][current[1]] == GameObject.FOOD:
@@ -57,7 +57,7 @@ class Agent:
                     # Checks whether this child is already been looked at and updates it if it found a faster route
                     if child not in cost_so_far or new_cost < cost_so_far[child]:
                         cost_so_far[child] = new_cost
-                        frontier.put(child, new_cost + self.manhattan_distance(child[0], child[1]))
+                        frontier.put((new_cost + self.manhattan_distance(child[0], child[1]), child))
                         came_from[child] = current
 
             else:
@@ -66,10 +66,11 @@ class Agent:
                     new_cost = cost_so_far[current] + 1
                     if child not in cost_so_far or new_cost < cost_so_far[child]:
                         cost_so_far[child] = new_cost
-                        frontier.put(child, new_cost + self.manhattan_distance(child[0], child[1]))
+                        frontier.put((new_cost + self.manhattan_distance(child[0], child[1]), child))
                         came_from[child] = current
 
         print(self.food)
+        print(self.manhattan_distance(self.snakeHeadX, self.snakeHeadY))
         print(path)
         if next_move is None:
             return Move.STRAIGHT
