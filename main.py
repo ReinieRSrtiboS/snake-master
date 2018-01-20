@@ -8,7 +8,7 @@ scale = None
 canvas_width = 800
 canvas_height = 800
 
-tics_per_second = 1
+tics_per_second = 250
 
 """ BEGIN GAME SETTINGS """
 # Board width and height

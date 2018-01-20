@@ -11,7 +11,7 @@ class Agent:
     snakeHeadY = None
     score = 0
     food = []
-    copy_board = [[0] * 25] * 25
+    copy_board = [[0] * 25 for _ in range(25)]
 
     def get_move(self, board, score, turns_alive, turns_to_starve, direction):
 
@@ -26,11 +26,11 @@ class Agent:
 
         if score is not self.score:
             self.score = score
-            self.update_copy(self.snakeHeadX, self.snakeHeadY, True)
+            self.update_copy(self.snakeHeadX, self.snakeHeadY, score, True)
             if score > 0:
                 self.food.remove((self.snakeHeadX, self.snakeHeadY))
         else:
-            self.update_copy(self.snakeHeadX, self.snakeHeadY)
+            self.update_copy(self.snakeHeadX, self.snakeHeadY, score)
 
         next_move = self.a_star(board, direction, self.snakeHeadX, self.snakeHeadY)
 
@@ -58,14 +58,10 @@ class Agent:
         tail_x, tail_y = None, None
 
         if tail:
-            copy = ""
             for i in range(0, 25):
                 for j in range(0, 25):
-                    copy += str(self.copy_board[i][j]) + " "
                     if self.copy_board[i][j] == 1:
                         tail_x, tail_y = i, j
-                copy += "\n"
-            print(copy)
 
         while not frontier.empty():
             current = frontier.get()[1]
@@ -156,21 +152,13 @@ class Agent:
         return new_direction
 
     # Keeps track of the snake on the board
-    def update_copy(self, x, y, ate=False):
-        print(str(x) + " " + str(y))
-        self.copy_board[x][y] = self.score + 2
-        print(self.copy_board[x][y])
+    def update_copy(self, x, y, score, ate=False):
         if not ate:
-            board = ""
             for i in range(0, 25):
                 for j in range(0, 25):
                     if self.copy_board[i][j] > 0:
-                        print(str(i) + " " + str(j))
                         self.copy_board[i][j] -= 1
-                    board += str(self.copy_board[i][j]) + " "
-                board += "\n"
-            print(board)
-        print(self.copy_board[x][y])
+        self.copy_board[x][y] = score + 1
 
     # If the snake dies, throw error for a moment of silence
     def on_die(self):
