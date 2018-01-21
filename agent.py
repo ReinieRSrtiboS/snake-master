@@ -35,10 +35,11 @@ class Agent:
         next_move = self.a_star(board, direction, self.snakeHeadX, self.snakeHeadY)
 
         if next_move is None:
+
             next_move = self.a_star(board, direction, self.snakeHeadX, self.snakeHeadY, True)
             if next_move is None:
                 return Move.STRAIGHT
-            return next_move
+            return self.get_turn(direction, self.snakeHeadX, self.snakeHeadY, next_move[0], next_move[1])
 
         return self.get_turn(direction, self.snakeHeadX, self.snakeHeadY, next_move[0], next_move[1])
 
@@ -51,22 +52,18 @@ class Agent:
         came_from = {}
         cost_so_far[start] = 0
         came_from[start] = None
-        tail_x, tail_y = None, None
-
-        # if tail:
-        for i in range(0, 25):
-            for j in range(0, 25):
-                if self.copy_board[i][j] == 1:
-                    tail_x, tail_y = i, j
 
         while not frontier.empty():
             current = frontier.get()[1]
 
             # If food is found look up the path stored in came_from
-            if (board[current[0]][current[1]] == GameObject.FOOD and not tail) or (tail and current[0] == tail_x and current[1] == tail_y):
-                if board[current[0]][current[1]] == GameObject.FOOD and self.score > 5:
+            if (board[current[0]][current[1]] == GameObject.FOOD and not tail) or (
+                            tail and self.copy_board[current[0]][current[1]] == 1):
+
+                if board[current[0]][current[1]] == GameObject.FOOD and not tail and self.score > 5:
+
                     if self.a_star(board, direction, current[0], current[1], True) is None:
-                        next_move = self.a_star(board, direction, x, y, True)
+                        return None
                     else:
                         next_move = current
                 else:
@@ -75,49 +72,57 @@ class Agent:
                 path = ""
                 path += str(next_move) + ", "
 
+                if next_move is None or came_from[next_move] is None:
+                    return None
+
                 while came_from[next_move] is not start:
                     next_move = came_from[next_move]
                     path += str(next_move) + ", "
+
+                # print(self.food)
+                # print(path)
                 break
 
             # For all the possible moves from current
             if current is start:
-                for child in self.children(board, current[0], current[1], direction):
+                for child in self.children(board, current[0], current[1], direction, cost_so_far[current]):
                     new_cost = cost_so_far[current] + 1
                     # Checks whether this child is already been looked at and updates it if it found a faster route
                     if child not in cost_so_far or new_cost < cost_so_far[child]:
                         cost_so_far[child] = new_cost
                         if tail:
-                            frontier.put((new_cost + self.manhattan_distance_to_tail(child[0], child[1], tail_x, tail_y), child))
+                            frontier.put(
+                                (new_cost + self.manhattan_distance_to_tail(child[0], child[1]), child))
                         else:
                             frontier.put((new_cost + self.manhattan_distance_to_food(child[0], child[1]), child))
                         came_from[child] = current
 
             else:
                 # The same as above but the direction has to be calculated
-                for child in self.children(board, current[0], current[1], self.get_new_direction(came_from[current][0], came_from[current][1], current[0], current[1])):
+                for child in self.children(board, current[0], current[1],
+                                           self.get_new_direction(came_from[current][0], came_from[current][1],
+                                                                  current[0], current[1]), cost_so_far[current]):
                     new_cost = cost_so_far[current] + 1
                     if child not in cost_so_far or new_cost < cost_so_far[child]:
                         cost_so_far[child] = new_cost
                         if tail:
-                            frontier.put((new_cost + self.manhattan_distance_to_tail(child[0], child[1], tail_x, tail_y), child))
+                            frontier.put(
+                                (new_cost + self.manhattan_distance_to_tail(child[0], child[1]), child))
                         else:
                             frontier.put((new_cost + self.manhattan_distance_to_food(child[0], child[1]), child))
                         came_from[child] = current
 
-        # print(self.food)
-        # print(self.manhattan_distance(self.snakeHeadX, self.snakeHeadY))
-        # print(path)
-
         return next_move
 
-
     # Returns all the possible locations the snake can move to
-    def children(self, board, x, y, direction):
+    def children(self, board, x, y, direction, cost_so_far):
         available = []
         for next in direction.get_xy_moves():
             if len(board) > x + next[0] >= 0 and len(board[0]) > y + next[1] >= 0:
-                if board[x + next[0]][y + next[1]] == GameObject.EMPTY or board[x + next[0]][y + next[1]] == GameObject.FOOD:
+                if board[x + next[0]][y + next[1]] == GameObject.EMPTY \
+                        or board[x + next[0]][y + next[1]] == GameObject.FOOD \
+                        or (board[x + next[0]][y + next[1]] == GameObject.SNAKE_BODY
+                            and cost_so_far > self.copy_board[x + next[0]][y + next[1]]):
                     available.append((x + next[0], y + next[1]))
 
         return available
@@ -131,8 +136,13 @@ class Agent:
         return distance
 
     # Calculates the Manhatten distance to the tail of the snake
-    def manhattan_distance_to_tail(self, x, y, tail_x, tail_y):
-        return abs(x - tail_x) + abs(y - tail_y)
+    def manhattan_distance_to_tail(self, x, y):
+        for i in range(0, 25):
+            for j in range(0, 25):
+                if self.copy_board[i][j] == 1:
+                    return abs(x - i) + abs(y - j)
+        return sys.maxsize
+
 
     # Looks up how to move into the new position
     def get_turn(self, direction, old_x, old_y, new_x, new_y):
@@ -155,9 +165,7 @@ class Agent:
 
         for i in range(0, 4):
             if Direction(i).get_xy_manipulation() == (dif_x, dif_y):
-                new_direction = Direction(i)
-
-        return new_direction
+                return Direction(i)
 
     # Keeps track of the snake on the board
     def update_copy(self, x, y, score, ate=False):
@@ -171,5 +179,5 @@ class Agent:
     # If the snake dies, throw error for a moment of silence
     def on_die(self):
         self.copy_board = [[0] * 25 for _ in range(25)]
-        raise ValueError("R.I.P.    Simon de kekke snek")
+        # raise ValueError("R.I.P.    Simon de kekke snek")
         pass
