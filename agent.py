@@ -40,10 +40,6 @@ class Agent:
                 return Move.STRAIGHT
             return next_move
 
-        # print(self.food)
-        # print(self.manhattan_distance(self.snakeHeadX, self.snakeHeadY))
-        # print(path)
-
         return self.get_turn(direction, self.snakeHeadX, self.snakeHeadY, next_move[0], next_move[1])
 
     def a_star(self, board, direction, x, y, tail=False):
@@ -57,21 +53,28 @@ class Agent:
         came_from[start] = None
         tail_x, tail_y = None, None
 
-        if tail:
-            for i in range(0, 25):
-                for j in range(0, 25):
-                    if self.copy_board[i][j] == 1:
-                        tail_x, tail_y = i, j
+        # if tail:
+        for i in range(0, 25):
+            for j in range(0, 25):
+                if self.copy_board[i][j] == 1:
+                    tail_x, tail_y = i, j
 
         while not frontier.empty():
             current = frontier.get()[1]
 
             # If food is found look up the path stored in came_from
-            if board[current[0]][current[1]] == GameObject.FOOD or (tail and current[0] == tail_x and current[1] == tail_y):
-                next_move = current
+            if (board[current[0]][current[1]] == GameObject.FOOD and not tail) or (tail and current[0] == tail_x and current[1] == tail_y):
+                if board[current[0]][current[1]] == GameObject.FOOD and self.score > 5:
+                    if self.a_star(board, direction, current[0], current[1], True) is None:
+                        next_move = self.a_star(board, direction, x, y, True)
+                    else:
+                        next_move = current
+                else:
+                    next_move = current
 
                 path = ""
                 path += str(next_move) + ", "
+
                 while came_from[next_move] is not start:
                     next_move = came_from[next_move]
                     path += str(next_move) + ", "
@@ -101,6 +104,11 @@ class Agent:
                         else:
                             frontier.put((new_cost + self.manhattan_distance_to_food(child[0], child[1]), child))
                         came_from[child] = current
+
+        # print(self.food)
+        # print(self.manhattan_distance(self.snakeHeadX, self.snakeHeadY))
+        # print(path)
+
         return next_move
 
 
@@ -162,6 +170,6 @@ class Agent:
 
     # If the snake dies, throw error for a moment of silence
     def on_die(self):
-        self.copy_board = [[0] * 25] * 25
+        self.copy_board = [[0] * 25 for _ in range(25)]
         raise ValueError("R.I.P.    Simon de kekke snek")
         pass
