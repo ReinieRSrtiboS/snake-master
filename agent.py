@@ -9,7 +9,7 @@ from move import Move, Direction
 class Agent:
     snakeHeadX = None
     snakeHeadY = None
-    score = 0
+    score, in_loop = 0, 0
     food = []
     copy_board = [[0] * 25 for _ in range(25)]
 
@@ -120,9 +120,9 @@ class Agent:
         for next in direction.get_xy_moves():
             if len(board) > x + next[0] >= 0 and len(board[0]) > y + next[1] >= 0:
                 if board[x + next[0]][y + next[1]] == GameObject.EMPTY \
-                        or board[x + next[0]][y + next[1]] == GameObject.FOOD \
-                        or (board[x + next[0]][y + next[1]] == GameObject.SNAKE_BODY
-                            and cost_so_far > self.copy_board[x + next[0]][y + next[1]]):
+                        or board[x + next[0]][y + next[1]] == GameObject.FOOD:
+                        # or (board[x + next[0]][y + next[1]] == GameObject.SNAKE_BODY
+                        #     and cost_so_far > self.copy_board[x + next[0]][y + next[1]]):
                     available.append((x + next[0], y + next[1]))
 
         return available
@@ -179,5 +179,6 @@ class Agent:
     # If the snake dies, throw error for a moment of silence
     def on_die(self):
         self.copy_board = [[0] * 25 for _ in range(25)]
-        # raise ValueError("R.I.P.    Simon de kekke snek")
+        self.score, self.in_loop = 0, 0
+        raise ValueError("R.I.P.    Simon de kekke snek")
         pass
