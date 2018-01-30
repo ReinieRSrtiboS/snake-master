@@ -1,4 +1,7 @@
 from tkinter import *
+
+import time
+
 from snake import Snake
 from board import Board
 
@@ -12,8 +15,8 @@ tics_per_second = 250
 
 """ BEGIN GAME SETTINGS """
 # Board width and height
-board_width = 25
-board_height = 25
+board_width = 15
+board_height = 15
 # Maximum number of food blocks on the board
 food_blocks_max = 3
 # Maximum number of wall blocks on the board
@@ -34,7 +37,8 @@ def callback():
 
 
 def main():
-    global root, canvas, canvas_height, canvas_width, board, snake, scale
+    global root, canvas, canvas_height, canvas_width, board, snake, scale, start
+    start = time.time()
     root = Tk()
     root.title("Snake")
     canvas = Canvas(root, width=canvas_width, height=canvas_height)
@@ -67,6 +71,7 @@ def update():
     global tics_per_second, board, snake, canvas
     # update gamestate
     if snake.update(board):
+        print(str(time.time() - start))
         snake.reset(board)
     # clear canvas
     canvas.delete("all")
